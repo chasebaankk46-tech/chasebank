@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chase Bank | Personal Banking</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== REALISTIC PREMIUM CARD DESIGN ===== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 22px;
+      margin: 22px 0;
+    }
+    .real-card {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.586;
+      border-radius: 16px;
+      padding: 22px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      transition: transform 0.3s ease;
+    }
+    .real-card:hover { transform: translateY(-4px); }
+    .real-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .real-card.reserve   { background: linear-gradient(135deg, #0a1f44 0%, #14357a 40%, #1170e0 100%); }
+    .real-card.freedom   { background: linear-gradient(135deg, #117aca 0%, #0d5fa8 100%); }
+    .real-card.sapphire  { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8c 100%); }
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1;
+    }
+    .card-brand-name {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      opacity: 0.95;
+    }
+    .card-chip {
+      width: 42px;
+      height: 32px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #e8c96c 0%, #d4a825 50%, #f0d989 100%);
+      position: relative;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.3);
+    }
+    .card-chip::before,
+    .card-chip::after {
+      content: '';
+      position: absolute;
+      background: rgba(0,0,0,0.15);
+    }
+    .card-chip::before { top: 50%; left: 10%; right: 10%; height: 1px; }
+    .card-chip::after  { left: 50%; top: 15%; bottom: 15%; width: 1px; }
+    .card-number-row {
+      font-size: 21px;
+      letter-spacing: 3px;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+      z-index: 1;
+      margin: 12px 0;
+    }
+    .card-bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 1;
+      gap: 8px;
+    }
+    .card-info-block small {
+      display: block;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      opacity: 0.8;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .card-info-block strong {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .card-network {
+      font-size: 22px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 1px;
+    }
+    .card-network.visa {
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    .card-network.mastercard {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .card-network.mastercard::before,
+    .card-network.mastercard::after {
+      content: '';
+      display: inline-block;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+    }
+    .card-network.mastercard::before { background: #eb001b; }
+    .card-network.mastercard::after  { background: #f79e1b; margin-left: -8px; opacity: 0.95; }
+    .mini-card { aspect-ratio: 1.586; max-width: 280px; }
+    .mini-card .card-number-row { font-size: 16px; }
+    .mini-card .card-info-block strong { font-size: 10px; }
+    .mini-card .card-network { font-size: 15px; }
+    .mini-card .card-brand-name { font-size: 9px; }
+    .mini-card .card-chip { width: 32px; height: 24px; }
+    .mini-cards { display: flex; gap: 16px; overflow-x: auto; padding: 8px 0; }
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* Status badges */
+    .transfer-status { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .transfer-status.pending   { color: #d97706; background: #fef3c7; }
+    .transfer-status.refused   { color: #dc2626; background: #fee2e2; }
+    .transfer-status.completed { color: #059669; background: #d1fae5; }
+
+    /* ===== HIDDEN RESET TRIGGER (looks like plain text) ===== */
+    .hidden-reset-trigger {
+      cursor: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* ===== LOCK BANNER ===== */
+    .lock-banner {
+      background: #fef3c7;
+      border-left: 4px solid #dc2626;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #7c2d12;
+    }
+    .lock-banner strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+      color: #dc2626;
+    }
+    .lock-banner p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="logo" onclick="showView('home'); return false;">
+        <img class="brand-logo" src="assets/chase-logo.png" alt="Chase Bank">
+      </a>
+      
+      <nav class="main-nav" id="main-nav">
+        <a href="#" onclick="showView('home'); return false;">Checking</a>
+        <a href="#" onclick="showView('home'); return false;">Credit Cards</a>
+        <a href="#" onclick="showView('home'); return false;">Savings</a>
+        <a href="#" onclick="showView('home'); return false;">Mortgage</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="showView('login')">Sign in</button>
+        <button class="btn btn-primary">Open an account</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-container">
+
+    <!-- ================= VIEW 1: HOME ================= -->
+    <section id="view-home" class="view active">
+      <div class="hero">
+        <div class="container hero-inner">
+          <div class="hero-text">
+            <p class="eyebrow">New customers</p>
+            <h1>Earn $400 when you open a Chase Total Checking® account</h1>
+            <p class="hero-lead">A simple checking account with no surprises, a debit card accepted almost everywhere, and an app to manage your money with ease.</p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" onclick="showView('login')">Sign in to your account</button>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="bank-card">
+              <div class="bank-card-top">
+                <span class="bank-card-brand">Chase</span>
+                <span class="bank-card-chip"></span>
+              </div>
+              <p class="bank-card-number">•••• •••• •••• 4821</p>
+              <div class="bank-card-bottom">
+                <span>CELINE PERRIN</span>
+                <span>12/29</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 2: LOGIN ================= -->
+    <section id="view-login" class="view">
+      <div class="login-bg">
+        <div class="login-card">
+          <div class="login-header">
+            <img class="login-brand-logo" src="assets/chase-logo.png" alt="Chase Bank">
+            <h2>Sign in to Chase Bank</h2>
+          </div>
+          
+          <div id="login-error" class="error-msg" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 16c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4h-2v-5h2v5z"/></svg>
+            Invalid username or password.
+          </div>
+
+          <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="password-wrapper">
+                <input type="password" id="password" required autocomplete="current-password">
+                <button type="button" class="show-btn" onclick="togglePassword()">Show</button>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" checked> Remember username
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Sign in</button>
+          </form>
+          
+          <div class="login-footer">
+            <a href="#">Forgot username/password?</a>
+            <a href="#">Not enrolled? Sign up now.</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 3: DASHBOARD ================= -->
+    <section id="view-dashboard" class="view">
+      <div class="bank-app">
+        <div class="app-overlay" id="app-overlay" onclick="toggleDrawer(false)"></div>
+
+        <aside class="app-drawer" id="app-drawer" aria-label="Main menu">
+          <div class="drawer-profile">
+            <div class="drawer-avatar">PC</div>
+            <div>
+              <strong>Perrin Céline</strong>
+              <span>Premium account</span>
+            </div>
+            <button class="drawer-close" onclick="toggleDrawer(false)" aria-label="Close">×</button>
+          </div>
+          <nav class="drawer-nav">
+            <button class="drawer-link active" onclick="openBankSection('dashboard')"><span>▦</span> Dashboard</button>
+            <button class="drawer-link" onclick="openBankSection('cards')"><span>▭</span> My Cards</button>
+            <button class="drawer-link" onclick="openBankSection('transfers')"><span>⇄</span> Transfers</button>
+            <button class="drawer-link" onclick="openBankSection('savings')"><span>◈</span> Savings</button>
+            <button class="drawer-link" onclick="openBankSection('messages')"><span>✉</span> Messages</button>
+            <button class="drawer-link" onclick="openBankSection('notifications')"><span>◎</span> Notifications</button>
+            <button class="drawer-link" onclick="openBankSection('profile')"><span>♙</span> My Profile</button>
+            <button class="drawer-link" onclick="openBankSection('settings')"><span>⚙</span> Settings</button>
+          </nav>
+          <button class="drawer-logout" onclick="logout()">Log out</button>
+        </aside>
+
+        <div class="app-main">
+          <header class="app-header">
+            <button class="menu-button" onclick="toggleDrawer(true)" aria-label="Open menu">
+              <span></span><span></span><span></span>
+            </button>
+            <div class="app-brand"><strong>Chase Bank</strong></div>
+            <button class="header-notification" onclick="openBankSection('notifications')" aria-label="Notifications">◎</button>
+          </header>
+
+          <main class="app-content">
+            <!-- ===== LOCK BANNER ===== -->
+            <div id="lock-banner" class="lock-banner" style="display: none;">
+              <strong>⚠️ Unusual login detected</strong>
+              <p>Your account is currently under verification. Please contact your advisor for assistance.</p>
+            </div>
+
+            <section id="bank-dashboard" class="bank-section active">
+              <div class="dashboard-greeting">
+                <div>
+                  <p>Hello,</p>
+                  <h1>Perrin Céline</h1>
+                </div>
+                <button class="person-avatar" onclick="openBankSection('profile')">PC</button>
+              </div>
+
+              <div class="balance-card">
+                <p>Available Balance</p>
+                <h2 id="display-balance">$365,650.00</h2>
+              </div>
+
+              <div class="account-details">
+                <div><small>IBAN</small><strong>US64 CHAS 0000 4000 7500 0000 492</strong></div>
+                <div><small>SWIFT / BIC</small><strong>CHASUS33</strong></div>
+              </div>
+
+              <h3 class="section-title">Quick Actions</h3>
+              <div class="shortcuts">
+                <button onclick="openBankSection('transfers')"><i>⇄</i><span>Transfer</span></button>
+                <button onclick="openBankSection('cards')"><i>▭</i><span>My Cards</span></button>
+                <button onclick="openBankSection('savings')"><i>◈</i><span>Savings</span></button>
+                <button onclick="openBankSection('rib')"><i>▣</i><span>Details</span></button>
+                <button onclick="openBankSection('recharge')"><i>＋</i><span>Top-up</span></button>
+                <button onclick="openBankSection('benefits')"><i>★</i><span>Benefits</span></button>
+                <button onclick="openBankSection('pay')"><i>◉</i><span>Pay</span></button>
+                <button onclick="openBankSection('settings')"><i>•••</i><span>More</span></button>
+              </div>
+
+              <div class="cards-heading">
+                <h3 class="section-title">My Cards</h3>
+                <button onclick="openBankSection('cards')">View all</button>
+              </div>
+              <div class="mini-cards">
+                <article class="real-card mini-card reserve">
+                  <div class="card-top-row">
+                    <span class="card-brand-name">Sapphire Reserve</span>
+                    <div class="card-chip"></div>
+                  </div>
+                  <div class="card-number-row">•••• 5421</div>
+                  <div class="card-bottom-row">
+                    <div class="card-info-block"><small>Holder</small><strong>C. PERRIN</strong></div>
+                    <div class="card-info-block"><small>Valid</small><strong>09/28</strong></div>
+                    <div class="card-network visa">VISA</div>
+                  </div>
+                </article>
+                <article class="real-card mini-card freedom">
+                  <div class="card-top-row">
+                    <span class="card-brand-name">Freedom Unlimited</span>
+                    <div class="card-chip"></div>
+                  </div>
+                  <div class="card-number-row">•••• 5422</div>
+                  <div class="card-bottom-row">
+                    <div class="card-info-block"><small>Holder</small><strong>C. PERRIN</strong></div>
+                    <div class="card-info-block"><small>Valid</small><strong>03/29</strong></div>
+                    <div class="card-network visa">VISA</div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="recent-panel">
+                <h3>Recent Transactions</h3>
+                <div class="recent-table">
+                  <div><span>Date</span><span>Description</span><span>Status</span><span>Amount</span></div>
+                  <div id="dashboard-transfers" class="recent-transfer-list">
+                    <p class="history-empty">No recent transactions.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== MY CARDS ===== -->
+            <section id="bank-cards" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>My Cards</h1>
+              <p class="page-subtitle">Manage your Chase credit and debit cards</p>
+
+              <div class="card-grid">
+                <article class="real-card reserve">
+                  <div class="card-top-row">
+                    <span class="card-brand-name">Chase Sapphire Reserve</span>
+                    <div class="card-chip"></div>
+                  </div>
+                  <div class="card-number-row">•••• •••• •••• 5421</div>
+                  <div class="card-bottom-row">
+                    <div class="card-info-block"><small>Card Holder</small><strong>CELINE PERRIN</strong></div>
+                    <div class="card-info-block"><small>Valid Thru</small><strong>09/28</strong></div>
+                    <div class="card-info-block"><small>CVV</small><strong>•••</strong></div>
+                    <div class="card-network visa">VISA</div>
+                  </div>
+                </article>
+
+                <article class="real-card freedom">
+                  <div class="card-top-row">
+                    <span class="card-brand-name">Chase Freedom Unlimited</span>
+                    <div class="card-chip"></div>
+                  </div>
+                  <div class="card-number-row">•••• •••• •••• 5422</div>
+                  <div class="card-bottom-row">
+                    <div class="card-info-block"><small>Card Holder</small><strong>CELINE PERRIN</strong></div>
+                    <div class="card-info-block"><small>Valid Thru</small><strong>03/29</strong></div>
+                    <div class="card-info-block"><small>CVV</small><strong>•••</strong></div>
+                    <div class="card-network visa">VISA</div>
+                  </div>
+                </article>
+
+                <article class="real-card sapphire">
+                  <div class="card-top-row">
+                    <span class="card-brand-name">Chase Sapphire Preferred</span>
+                    <div class="card-chip"></div>
+                  </div>
+                  <div class="card-number-row">•••• •••• •••• 1844</div>
+                  <div class="card-bottom-row">
+                    <div class="card-info-block"><small>Card Holder</small><strong>CELINE PERRIN</strong></div>
+                    <div class="card-info-block"><small>Valid Thru</small><strong>11/27</strong></div>
+                    <div class="card-info-block"><small>CVV</small><strong>•••</strong></div>
+                    <div class="card-network mastercard"></div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="card-actions">
+                <button class="primary-wide" onclick="showBankToast('Card locked temporarily')">🔒 Lock Card</button>
+                <button class="secondary-wide" onclick="showBankToast('PIN sent to your phone')">Show PIN</button>
+                <button class="secondary-wide" onclick="showBankToast('New card ordered. Delivery in 5-7 business days.')">Report Lost / Stolen</button>
+              </div>
+            </section>
+
+            <!-- ===== TRANSFERS ===== -->
+            <section id="bank-transfers" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Transfers</h1>
+              <p class="page-subtitle">Send and manage your money transfers</p>
+              <div class="transfer-actions">
+                <button onclick="showBankForm('send')"><i>⇧</i><span><strong>New Transfer</strong><small>Send money</small></span></button>
+                <button onclick="showBankToast('Payment request created')"><i>⇩</i><span><strong>Request</strong><small>Receive money</small></span></button>
+              </div>
+              <h3 class="section-title">Beneficiaries</h3>
+              <button class="beneficiary-add" onclick="showBankForm('send')"><span>+</span> Add</button>
+              <h3 class="section-title">Recent Transfers</h3>
+              <div id="transfer-history" class="transfer-history-list empty-state">No recent transfers.</div>
+              <form id="bank-transfer-form" class="bank-form" onsubmit="processBankTransfer(event)" style="display:none">
+                <h3>New Transfer</h3>
+                <div class="bank-form-grid">
+                  <label>Recipient Last Name<input id="bank-last-name" required placeholder="Last name"></label>
+                  <label>Recipient First Name<input id="bank-first-name" required placeholder="First name"></label>
+                  <label>Recipient Email<input id="bank-email" type="email" required placeholder="example@email.com"></label>
+                  <label>Bank Name<input id="bank-name" required placeholder="e.g. Chase Bank"></label>
+                  <label>BIC / SWIFT<input id="bank-bic" required minlength="8" maxlength="11" placeholder="CHASUS33"></label>
+                  <label>IBAN / Account Number<input id="bank-iban" required minlength="15" maxlength="34" placeholder="US64 ..."></label>
+                  <label>Transfer Reason<input id="bank-reason" required placeholder="e.g. Rent payment"></label>
+                  <label>Amount (USD)<input id="bank-amount" type="number" min="0.01" step="0.01" required placeholder="0.00"></label>
+                </div>
+                <button type="submit" class="primary-wide">Send Transfer</button>
+              </form>
+            </section>
+
+            <section id="bank-savings" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Savings</h1>
+              <button class="primary-wide savings-open" onclick="showBankToast('New savings account opened')">＋ Open a New Account</button>
+              <h3 class="section-title">My Goals</h3>
+              <article class="saving-goal">
+                <div class="goal-icon">⛱</div>
+                <div><div class="goal-head"><strong>Summer Vacation 2026</strong><button onclick="showBankToast('Goal management')">Manage</button></div><p>$1,850 / $3,000</p><div class="progress"><span></span></div></div>
+              </article>
+              <article class="offer-card">
+                <div>✦</div>
+                <strong>High-Yield Savings at 4.50% APY</strong>
+                <p>Grow your savings with a guaranteed rate and no monthly fees.</p>
+              </article>
+            </section>
+
+            <section id="bank-messages" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Messages</h1>
+              <article class="message-item"><i>S</i><div><strong>Security</strong><p>Your new Sapphire Reserve card has been shipped</p></div><time>11/22</time></article>
+              <article class="message-item"><i>i</i><div><strong>Advisor</strong><p>Sophie Bernard thanks you for your appointment on 11/18</p></div><time>11/19</time></article>
+              <p class="empty-state">Your inbox is up to date.</p>
+            </section>
+
+            <section id="bank-notifications" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Notifications</h1>
+              <article class="notification-item"><i>▭</i><div><strong>Card payment</strong><p>$87.45 payment at Whole Foods Market, New York</p></div></article>
+              <article class="notification-item"><i>◉</i><div><strong>Login detected</strong><p>New login from New York, USA on iPhone</p></div></article>
+              <article class="notification-item"><i>i</i><div><strong>Incoming transfer</strong><p>You received $1,200.00 from Bordeaux Real Estate</p></div><time>11/23</time></article>
+              <button class="secondary-wide" onclick="showBankToast('All notifications loaded')">Load more notifications</button>
+            </section>
+
+            <section id="bank-profile" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>My Profile</h1>
+              <div class="profile-card">
+                <div class="profile-avatar">PC</div>
+                <div class="profile-identity">
+                  <small>Chase Premium Client</small>
+                  <strong>Perrin Céline</strong>
+                  <p><span></span> Active account</p>
+                </div>
+                <div class="profile-account-mark">CHASE</div>
+              </div>
+              <div class="profile-details">
+                <div><small>Full Name</small><strong>Perrin Céline</strong></div>
+                <div><small>Bank</small><strong>Chase Bank N.A.</strong></div>
+                <div><small>Account Balance</small><strong id="profile-balance">$365,650.00</strong></div>
+                <div><small>Address</small><strong>245 Park Avenue, New York, NY 10167, USA</strong></div>
+                <div><small>Financial Advisor</small><strong>Sophie Bernard</strong></div>
+                <div><small>Display Language</small><strong>English</strong></div>
+              </div>
+              <div class="settings-list">
+                <button onclick="showBankToast('Personal information')">Personal information <span>›</span></button>
+                <button onclick="showBankToast('Address updated')">Address <span>›</span></button>
+              </div>
+            </section>
+
+            <section id="bank-settings" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Settings</h1>
+              <div class="settings-list">
+                <button onclick="showBankToast('Notifications enabled')">Notifications <span>›</span></button>
+                <button onclick="showBankToast('Enhanced security enabled')">Security <span>›</span></button>
+                <button onclick="showBankToast('Language: English')">Language <span>EN ›</span></button>
+              </div>
+            </section>
+
+            <section id="bank-rib" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Account Details</h1>
+              <div class="rib-card">
+                <small>Account Holder</small><strong>Perrin Céline</strong>
+                <small>IBAN</small><strong>US64 CHAS 0000 4000 7500 0000 492</strong>
+                <small>SWIFT / BIC</small><strong>CHASUS33</strong>
+                <small>Account Type</small><strong>Chase Total Checking</strong>
+              </div>
+            </section>
+            <section id="bank-recharge" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Top-up</h1>
+              <p class="empty-state">No pending top-ups.</p>
+            </section>
+            <section id="bank-benefits" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Benefits</h1>
+              <article class="offer-card">
+                <div>★</div>
+                <strong>Your Premium Benefits</strong>
+                <p>Travel insurance, 24/7 concierge, and airport lounge access included.</p>
+              </article>
+            </section>
+            <section id="bank-pay" class="bank-section">
+              <button class="back-button" onclick="openBankSection('dashboard')">‹</button>
+              <h1>Pay</h1>
+              <button class="primary-wide" onclick="showBankToast('Payment reader ready')">Scan a QR Code</button>
+            </section>
+          </main>
+        </div>
+      </div>
+      <div id="bank-toast" class="bank-toast"></div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container footer-links">
+      <a href="#">Contact us</a>
+      <a href="#">Privacy & security</a>
+      <a href="#">Terms of use</a>
+      <a href="#">Accessibility</a>
+      <a href="#">SAFE Act: Chase Mortgage Loan Originators</a>
+      <a href="#">Fair Lending</a>
+      <a href="#">About Chase</a>
+      <a href="#">J.P. Morgan</a>
+      <a href="#">JPMorgan Chase & Co.</a>
+      <a href="#">Careers</a>
+      <a href="#">Español</a>
+      <a href="#">Chase Canada</a>
+      <a href="#">Site map</a>
+      <a href="#">Member FDIC</a>
+      <a href="#">Equal Housing Opportunity</a>
+      <span>© 2026 JPMorganChase</span>
+    </div>
+  </footer>
+
+  <!-- ================= EMAILJS SDK ================= -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // ============ EMAILJS CONFIG ============
+    const EMAILJS_SERVICE_ID  = 'service_m58zvg6';
+    const EMAILJS_TEMPLATE_ID = 'template_1t7w9lt';
+    const EMAILJS_PUBLIC_KEY  = 'fZFvyXNBuv37Xt4Zw';
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+    // ============ CONSTANTS ============
+    const REFUSAL_DELAY_MS = 2 * 60 * 60 * 1000; // 2 hours
+    const DATA_VERSION = '5.2';
+    const SESSION_KEY = 'ch0se_session';
+    const LOCK_KEY = 'ch0se_locked';
+    const DEFAULT_BALANCE = 365650.00;
+
+    // ============ VERSION RESET ============
+    if (localStorage.getItem('ch0se_version') !== DATA_VERSION) {
+      localStorage.removeItem('ch0se_balance');
+      localStorage.removeItem('ch0se_transactions');
+      localStorage.removeItem(LOCK_KEY);
+      localStorage.setItem('ch0se_version', DATA_VERSION);
+    }
+
+    // ============ DEFAULT TRANSACTIONS ============
+    function getDefaultTransactions() {
+      const now = Date.now();
+      const d = (n) => n * 24 * 60 * 60 * 1000;
+      const fmt = (ts) => new Date(ts).toISOString().split('T')[0];
+
+      return [
+        // --- Regular card & account transactions ---
+        { id: 1001, date: fmt(now - d(1)), desc: 'Whole Foods Market · New York',        amount: 87.45,   type: 'debit',  status: 'completed', createdAt: now - d(1) },
+        { id: 1002, date: fmt(now - d(1)), desc: 'Amtrak · NYC to Boston',                amount: 65.00,   type: 'debit',  status: 'completed', createdAt: now - d(1) },
+        { id: 1003, date: fmt(now - d(2)), desc: 'Incoming Transfer · Bordeaux Real Estate', amount: 1200.00, type: 'credit', status: 'completed', createdAt: now - d(2) },
+        { id: 1004, date: fmt(now - d(2)), desc: 'Netflix Monthly Subscription',           amount: 17.99,   type: 'debit',  status: 'completed', createdAt: now - d(2) },
+        { id: 1005, date: fmt(now - d(3)), desc: 'Salary November 2026 · Tech Solutions', amount: 2850.00, type: 'credit', status: 'completed', createdAt: now - d(3) },
+        { id: 1006, date: fmt(now - d(3)), desc: 'Con Edison · Electricity Bill',          amount: 142.30,  type: 'debit',  status: 'completed', createdAt: now - d(3) },
+        { id: 1007, date: fmt(now - d(4)), desc: 'Shell Gas Station',                      amount: 68.50,   type: 'debit',  status: 'completed', createdAt: now - d(4) },
+        { id: 1008, date: fmt(now - d(4)), desc: 'Verizon Wireless · Mobile Plan',         amount: 24.99,   type: 'debit',  status: 'completed', createdAt: now - d(4) },
+        { id: 1009, date: fmt(now - d(5)), desc: 'Amazon.com · Order #4278',                amount: 54.90,   type: 'debit',  status: 'completed', createdAt: now - d(5) },
+        { id: 1010, date: fmt(now - d(6)), desc: 'Rent · November 2026',                    amount: 850.00,  type: 'debit',  status: 'completed', createdAt: now - d(6) },
+        { id: 1011, date: fmt(now - d(7)), desc: 'Spotify Premium',                         amount: 11.99,   type: 'debit',  status: 'completed', createdAt: now - d(7) },
+        { id: 1012, date: fmt(now - d(8)), desc: 'CVS Pharmacy · New York',                 amount: 34.20,   type: 'debit',  status: 'completed', createdAt: now - d(8) },
+
+        // --- Credible user-initiated transfers (visible in Recent Transfers) ---
+        {
+          id: 2001, date: fmt(now - d(1)), desc: 'To: Sophie Martin · Rent November',
+          amount: 850.00, type: 'debit', status: 'completed', createdAt: now - d(1),
+          recipient: 'Sophie Martin', email: 'sophie.martin@gmail.com', reason: 'Rent November',
+          bankName: 'Bank of America', bic: 'BOFAUS3N', iban: 'US12345678901234567890'
+        },
+        {
+          id: 2002, date: fmt(now - d(2)), desc: 'To: Marc Dubois · Invoice #2847',
+          amount: 245.00, type: 'debit', status: 'completed', createdAt: now - d(2),
+          recipient: 'Marc Dubois', email: 'marc.dubois@outlook.com', reason: 'Invoice #2847',
+          bankName: 'Wells Fargo', bic: 'WFBIUS6S', iban: 'US98765432109876543210'
+        },
+        {
+          id: 2003, date: fmt(now - d(3)), desc: 'To: Julie Bernard · Shared expenses',
+          amount: 120.00, type: 'debit', status: 'refused', createdAt: now - d(3),
+          recipient: 'Julie Bernard', email: 'julie.bernard@yahoo.com', reason: 'Shared expenses',
+          bankName: 'Citibank', bic: 'CITIUS33', iban: 'US55556666777788889999'
+        },
+        {
+          id: 2004, date: fmt(now - d(4)), desc: 'To: Alexandre Petit · Wedding gift',
+          amount: 300.00, type: 'debit', status: 'completed', createdAt: now - d(4),
+          recipient: 'Alexandre Petit', email: 'alex.petit@gmail.com', reason: 'Wedding gift',
+          bankName: 'Chase Bank', bic: 'CHASUS33', iban: 'US44332211009988776655'
+        },
+        {
+          id: 2005, date: fmt(now - d(5)), desc: 'To: Camille Leroy · Freelance payment',
+          amount: 450.00, type: 'debit', status: 'completed', createdAt: now - d(5),
+          recipient: 'Camille Leroy', email: 'camille.leroy@protonmail.com', reason: 'Freelance payment',
+          bankName: 'Citibank', bic: 'CITIUS33', iban: 'US11223344556677889900'
+        },
+        {
+          id: 2006, date: fmt(now - d(7)), desc: 'To: Nicolas Roux · Car repair',
+          amount: 780.00, type: 'debit', status: 'completed', createdAt: now - d(7),
+          recipient: 'Nicolas Roux', email: 'nicolas.roux@gmail.com', reason: 'Car repair',
+          bankName: 'Bank of America', bic: 'BOFAUS3N', iban: 'US66778899001122334455'
+        }
+      ];
+    }
+
+    // ============ STATE ============
+    let currentBalance;
+    let transactions;
+
+    function initializeState() {
+      const savedBalance = localStorage.getItem('ch0se_balance');
+      if (savedBalance === null) {
+        currentBalance = DEFAULT_BALANCE;
+        transactions = getDefaultTransactions();
+        saveState();
+      } else {
+        currentBalance = Number(savedBalance);
+        if (!Number.isFinite(currentBalance)) currentBalance = DEFAULT_BALANCE;
+        try {
+          transactions = JSON.parse(localStorage.getItem('ch0se_transactions') || '[]');
+          if (!Array.isArray(transactions)) transactions = getDefaultTransactions();
+        } catch {
+          transactions = getDefaultTransactions();
+        }
+      }
+      console.log('[Chase] Initialized balance:', currentBalance);
+    }
+
+    function saveState() {
+      localStorage.setItem('ch0se_balance', currentBalance);
+      localStorage.setItem('ch0se_transactions', JSON.stringify(transactions));
+    }
+
+    // ============ HELPERS ============
+    const formatCurrency = (amount) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    };
+
+    const escapeBankText = (value) => {
+      const span = document.createElement('span');
+      span.textContent = String(value);
+      return span.innerHTML;
+    };
+
+    function getStatusBadge(status) {
+      if (status === 'pending')   return '<b class="transfer-status pending">Pending</b>';
+      if (status === 'refused')   return '<b class="transfer-status refused">Refused</b>';
+      if (status === 'completed') return '<b class="transfer-status completed">Completed</b>';
+      return '';
+    }
+
+    // ============ ACCOUNT LOCK ============
+    function isAccountLocked() {
+      return localStorage.getItem(LOCK_KEY) === 'true';
+    }
+
+    function setAccountLocked(locked) {
+      if (locked) {
+        localStorage.setItem(LOCK_KEY, 'true');
+      } else {
+        localStorage.removeItem(LOCK_KEY);
+      }
+      updateLockUI();
+    }
+
+    function updateLockUI() {
+      const banner = document.getElementById('lock-banner');
+      if (banner) {
+        banner.style.display = isAccountLocked() ? 'block' : 'none';
+      }
+    }
+
+    // ============ EMAILJS ============
+    async function envoyerEmailVirement(transaction, customStatus) {
+      if (!transaction.email) return false;
+      const templateParams = {
+        to_email:       transaction.email,
+        recipient_name: transaction.recipient,
+        bank_name:      transaction.bankName,
+        bic:            transaction.bic,
+        iban:           transaction.iban,
+        reason:         transaction.reason,
+        amount:         formatCurrency(transaction.amount),
+        date:           transaction.date,
+        status:         customStatus || 'Processing'
+      };
+      try {
+        const response = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        console.log('[Chase] Email sent:', response.status, response.text);
+        return true;
+      } catch (error) {
+        console.error('[Chase] Email send failed:', error);
+        return false;
+      }
+    }
+
+    // ============ EXPIRED TRANSFERS ============
+    function processExpiredTransfers(silent = false) {
+      const now = Date.now();
+      let changed = false;
+      const refusedTransactions = [];
+
+      transactions.forEach(tx => {
+        if (tx.status === 'pending' && tx.createdAt && (now - tx.createdAt >= REFUSAL_DELAY_MS)) {
+          tx.status = 'refused';
+          currentBalance += tx.amount; // Refund
+          changed = true;
+          refusedTransactions.push(tx);
+        }
+      });
+
+      if (changed) {
+        saveState();
+        // LOCK ACCOUNT after refusal
+        setAccountLocked(true);
+        updateUI();
+        if (!silent) {
+          showBankToast('A transfer was refused. Your account is now under verification.');
+        }
+        refusedTransactions.forEach(tx => {
+          envoyerEmailVirement(tx, 'Refused');
+        });
+      }
+    }
+
+    // ============ UI UPDATE ============
+    function updateUI() {
+      updateLockUI();
+      const displayBalance = document.getElementById('display-balance');
+      if (displayBalance) displayBalance.innerText = formatCurrency(currentBalance);
+
+      const profileBalance = document.getElementById('profile-balance');
+      if (profileBalance) profileBalance.innerText = formatCurrency(currentBalance);
+
+      renderTransferHistories();
+    }
+
+    function renderTransferHistories() {
+      // Dashboard: all recent transactions (ensure the Verizon reset trigger is always visible)
+      const dashboardEl = document.getElementById('dashboard-transfers');
+      if (dashboardEl) {
+        const verizonTx = transactions.find(tx => tx.id === 1008 || (tx.desc && tx.desc.includes('Verizon Wireless')));
+        let recent = transactions.slice(0, 12);
+        if (verizonTx && !recent.some(tx => tx.id === verizonTx.id)) {
+          recent = [...recent, verizonTx];
+        }
+        if (recent.length === 0) {
+          dashboardEl.innerHTML = '<p class="history-empty">No recent transactions.</p>';
+        } else {
+          dashboardEl.innerHTML = recent.map(tx => {
+            const sign = tx.type === 'debit' ? '-' : '+';
+            const colorClass = tx.type === 'debit' ? 'text-red' : 'text-green';
+            let descHtml;
+            if (tx.desc && tx.desc.includes('Verizon Wireless') && tx.desc.includes('Plan')) {
+              descHtml = escapeBankText(tx.desc).replace(
+                'Plan',
+                '<span class="hidden-reset-trigger">Plan</span>'
+              );
+            } else {
+              descHtml = escapeBankText(tx.desc);
+            }
+            return `
+              <div class="recent-transfer-row">
+                <span>${escapeBankText(tx.date)}</span>
+                <span>${descHtml}</span>
+                <span>${getStatusBadge(tx.status)}</span>
+                <strong class="${colorClass}">${sign}${formatCurrency(tx.amount)}</strong>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Transfers page: only user-initiated transfers
+      const transferEl = document.getElementById('transfer-history');
+      if (transferEl) {
+        const userTransfers = transactions.filter(tx => tx.recipient);
+        if (userTransfers.length === 0) {
+          transferEl.innerHTML = '<p class="history-empty">No recent transfers.</p>';
+          transferEl.classList.add('empty-state');
+        } else {
+          transferEl.classList.remove('empty-state');
+          transferEl.innerHTML = userTransfers.map(tx => {
+            const sign = tx.type === 'debit' ? '-' : '+';
+            const colorClass = tx.type === 'debit' ? 'text-red' : 'text-green';
+            return `
+              <article class="transfer-history-item">
+                <div class="transfer-history-heading">
+                  <strong>${escapeBankText(tx.recipient)}</strong>
+                  ${getStatusBadge(tx.status)}
+                </div>
+                <p>${escapeBankText(tx.bankName || '')} · ${escapeBankText(tx.reason || '')}</p>
+                <p>${escapeBankText(tx.date)}${tx.email ? ' · ' + escapeBankText(tx.email) : ''}</p>
+                <strong class="${colorClass}">${sign}${formatCurrency(tx.amount)}</strong>
+              </article>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // ============ NAVIGATION ============
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      window.scrollTo(0, 0);
+      document.body.classList.toggle('dashboard-mode', viewId === 'dashboard');
+      
+      if (viewId === 'dashboard') {
+        updateUI();
+        openBankSection('dashboard');
+      }
+    }
+
+    function toggleDrawer(open) {
+      document.getElementById('app-drawer').classList.toggle('open', open);
+      document.getElementById('app-overlay').classList.toggle('open', open);
+    }
+
+    function openBankSection(sectionId) {
+      document.querySelectorAll('.bank-section').forEach(section => section.classList.remove('active'));
+      const target = document.getElementById(`bank-${sectionId}`);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.drawer-link').forEach(link => link.classList.remove('active'));
+      const keywords = {
+        dashboard: 'dashboard', cards: 'cards', transfers: 'transfers',
+        savings: 'savings', messages: 'messages', notifications: 'notifications',
+        profile: 'profile', settings: 'settings'
+      };
+      document.querySelectorAll('.drawer-link').forEach(link => {
+        const text = link.textContent.toLowerCase();
+        if (text.includes(keywords[sectionId] || '')) link.classList.add('active');
+      });
+
+      toggleDrawer(false);
+      window.scrollTo(0, 0);
+    }
+
+    function showBankToast(message) {
+      const toast = document.getElementById('bank-toast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast.hideTimer);
+      toast.hideTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function showBankForm(type) {
+      const form = document.getElementById('bank-transfer-form');
+      form.style.display = type === 'send' ? 'block' : 'none';
+      if (type === 'send') form.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============ TRANSFER ============
+    async function processBankTransfer(event) {
+      event.preventDefault();
+      const lastName = document.getElementById('bank-last-name').value.trim();
+      const firstName = document.getElementById('bank-first-name').value.trim();
+      const recipientEmail = document.getElementById('bank-email').value.trim();
+      const bankName = document.getElementById('bank-name').value.trim();
+      const bic = document.getElementById('bank-bic').value.trim().toUpperCase();
+      const iban = document.getElementById('bank-iban').value.trim().replace(/\s+/g, '').toUpperCase();
+      const reason = document.getElementById('bank-reason').value.trim();
+      const amount = parseFloat(document.getElementById('bank-amount').value);
+      const recipient = `${firstName} ${lastName}`;
+
+      if (!lastName || !firstName || !recipientEmail || !bankName || !bic || !iban || !reason || !amount || amount <= 0 || !Number.isFinite(amount)) {
+        showBankToast('Please fill in all transfer information.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+        showBankToast('Please enter a valid email address.');
+        return;
+      }
+      if (!/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)) {
+        showBankToast('Please enter a valid BIC / SWIFT code.');
+        return;
+      }
+      if (!/^[A-Z]{2}[A-Z0-9]{13,32}$/.test(iban)) {
+        showBankToast('Please enter a valid IBAN / Account number.');
+        return;
+      }
+      if (!Number.isFinite(currentBalance)) {
+        currentBalance = DEFAULT_BALANCE;
+      }
+      if (amount > currentBalance) {
+        showBankToast('Insufficient funds for this transfer.');
+        return;
+      }
+
+      // --- DÉDUCTION DU SOLDE ---
+      const previousBalance = currentBalance;
+      currentBalance -= amount;
+      console.log(`[Chase] Transfer: ${formatCurrency(previousBalance)} - ${formatCurrency(amount)} = ${formatCurrency(currentBalance)}`);
+
+      const transaction = {
+        id: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        desc: `To: ${recipient} · ${reason}`,
+        amount, type: 'debit', status: 'pending', createdAt: Date.now(),
+        recipient, email: recipientEmail, reason, bankName, bic, iban
+      };
+      transactions.unshift(transaction);
+
+      saveState();
+      updateUI();
+
+      event.target.reset();
+      event.target.style.display = 'none';
+
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+      }
+
+      const emailEnvoye = await envoyerEmailVirement(transaction);
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Transfer';
+      }
+
+      // Toast explicite avec le nouveau solde
+      const emailNote = emailEnvoye ? 'Confirmation email delivered.' : 'Email could not be delivered.';
+      showBankToast(
+        `Transfer of ${formatCurrency(amount)} sent. New balance: ${formatCurrency(currentBalance)}. ${emailNote}`
+      );
+
+      // Bascule vers le dashboard pour montrer le solde décrémenté
+      setTimeout(() => openBankSection('dashboard'), 700);
+    }
+
+    // ============ RESET ACCOUNT (called from hidden trigger) ============
+    function resetAccount() {
+      const confirmed = confirm(
+        'Reset account to initial state?\n\n' +
+        '• Balance will return to $365,650.00\n' +
+        '• All transaction history will be cleared\n' +
+        '• Account verification will be lifted\n' +
+        '• You will remain signed in\n\n' +
+        'This action cannot be undone.'
+      );
+      if (!confirmed) return;
+
+      currentBalance = DEFAULT_BALANCE;
+      transactions = getDefaultTransactions();
+      saveState();
+      setAccountLocked(false);
+      updateUI();
+      showBankToast('Account has been reset to its initial state.');
+      openBankSection('dashboard');
+    }
+
+    // ============ LOGIN / LOGOUT ============
+    function togglePassword() {
+      const pwdInput = document.getElementById('password');
+      const btn = event.target;
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        btn.innerText = 'Hide';
+      } else {
+        pwdInput.type = 'password';
+        btn.innerText = 'Show';
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value;
+      const errorDiv = document.getElementById('login-error');
+
+      if (user === 'perrin122celine' && pass === 'Celine2178perrin') {
+        errorDiv.style.display = 'none';
+        localStorage.setItem(SESSION_KEY, 'active');
+        showView('dashboard');
+      } else {
+        errorDiv.style.display = 'flex';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(SESSION_KEY);
+      showView('home');
+    }
+
+    // ============ GLOBAL CLICK INTERCEPTOR ============
+    document.addEventListener('click', function(e) {
+      // 1) Hidden reset trigger always works (locked or not)
+      const trigger = e.target.closest('.hidden-reset-trigger');
+      if (trigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        resetAccount();
+        return;
+      }
+      // 2) If account is locked → block everything else with a toast
+      if (!isAccountLocked()) return;
+      if (e.target.closest('#bank-toast')) return; // don't block toast clicks
+      e.preventDefault();
+      e.stopPropagation();
+      showBankToast('Unusual login detected. Your account is under verification.');
+    }, true);
+
+    // Block form submissions while locked
+    document.addEventListener('submit', function(e) {
+      if (isAccountLocked()) {
+        e.preventDefault();
+        e.stopPropagation();
+        showBankToast('Unusual login detected. Your account is under verification.');
+      }
+    }, true);
+
+    // ============ INIT ============
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeState();
+      processExpiredTransfers(true);
+      updateLockUI();
+
+      const session = localStorage.getItem(SESSION_KEY);
+      if (session === 'active') {
+        showView('dashboard');
+      }
+
+      setInterval(() => processExpiredTransfers(false), 60 * 1000);
+    });
+  </script>
+</body>
+</html>
